@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import  keccak256 from 'keccak256';
 
 
 
@@ -37,7 +38,7 @@ class Chain {
     chain: Block[]
 
     constructor() {
-        const block = new Block([new Transaction("0x0", "0x1", 30_000)],"0x00")  // genesis block
+        const block = new Block([new Transaction("0x", "0x1", 30)],"0000000000000000000000000000000000000000000000000000000000000000")  // genesis block
         this.chain = [
             block
         ];
@@ -61,8 +62,6 @@ class Chain {
 
         if (isValid) {
             const newBlock = new Block([transaction],this.lastBlock.hash )
-            // const blockHash = this.hashBlock(newBlock)
-            // newBlock.setHash(blockHash)
             this.chain.push(newBlock);
         }
     }
@@ -75,19 +74,19 @@ class Wallet {
     public privateKey: string;
 
     constructor() {
-        const keypair = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 2048,
+      
+        const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+            namedCurve: 'secp256k1', // Curve used in Bitcoin, Ethereum, etc.
             publicKeyEncoding: { type: 'spki', format: 'pem' },
-            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
         });
-
-        this.privateKey = keypair.privateKey;
-        this.publicKey = keypair.publicKey;
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
     }
 
     sendMoney(amount: number, payeePublicKey: string) {
         const time = Date.now()
-        const transaction = {from:this.publicKey, to:payeePublicKey, value:amount,timestamp :time};
+        const transaction = {from:this.publicKey, to:payeePublicKey, value:amount};
 
         const sign = crypto.createSign('SHA256');
         sign.update(transaction.toString()).end();
@@ -101,3 +100,18 @@ class Wallet {
 
 
 
+const alice = new Wallet();
+const bob = new Wallet();
+
+alice.sendMoney(1,bob.publicKey)
+
+
+const privateKey = crypto.randomBytes(32);
+console.log(privateKey.toString("hex"))
+// Generate the public key using ECDH on secp256k1 curve
+const ecdh = crypto.createECDH('secp256k1');
+ecdh.setPrivateKey(privateKey);
+const publicKey = ecdh.getPublicKey(null, 'uncompressed').slice(1); // Remove 0x04 prefix
+const address = keccak256(publicKey); // Last 20 bytes
+
+console.log(address.toString("hex").slice(-40));

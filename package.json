@@ -2,9 +2,7 @@
   "name": "my-blockchain",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "dev":"tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,5 +12,8 @@
   "devDependencies": {
     "@types/node": "^22.5.0",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "keccak256": "^1.0.6"
   }
 }
